@@ -9,6 +9,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+type sectores struct {
+	nombre    string
+	reloj     []int64
+	direccion string
+}
+
 func getServer(client pb.BrokerServiceClient, req *pb.GetServerServiceReq) (*pb.GetServerServiceRes, error) {
 	resp, err := client.GetServer(context.Background(), req)
 	if err != nil {
@@ -50,6 +56,8 @@ func deleteBase(client pb.InformerServiceClient, req *pb.DeleteBaseServiceReq) (
 }
 
 func main() {
+	var registros []sectores
+
 	opts := grpc.WithInsecure()
 	cc, err := grpc.Dial("localhost:8080", opts)
 	if err != nil {
@@ -107,7 +115,23 @@ func main() {
 				log.Fatal(err)
 			}
 
-			fmt.Println(result)
+			s := &sectores{
+				nombre:    sector,
+				reloj:     result.Clock,
+				direccion: result.Id,
+			}
+
+			flag := 0
+			for i, v := range registros {
+				if v.nombre == sector {
+					registros[i] = *s
+					flag = 1
+				}
+			}
+
+			if flag == 0 {
+				registros = append(registros, *s)
+			}
 
 		case 2:
 			var sector string
@@ -143,7 +167,23 @@ func main() {
 				log.Fatal(err)
 			}
 
-			fmt.Println(result)
+			s := &sectores{
+				nombre:    sector,
+				reloj:     result.Clock,
+				direccion: result.Id,
+			}
+
+			flag := 0
+			for i, v := range registros {
+				if v.nombre == sector {
+					registros[i] = *s
+					flag = 1
+				}
+			}
+
+			if flag == 0 {
+				registros = append(registros, *s)
+			}
 
 		case 3:
 			var sector string
@@ -179,7 +219,23 @@ func main() {
 				log.Fatal(err)
 			}
 
-			fmt.Println(result)
+			s := &sectores{
+				nombre:    sector,
+				reloj:     result.Clock,
+				direccion: result.Id,
+			}
+
+			flag := 0
+			for i, v := range registros {
+				if v.nombre == sector {
+					registros[i] = *s
+					flag = 1
+				}
+			}
+
+			if flag == 0 {
+				registros = append(registros, *s)
+			}
 
 		case 4:
 			var sector string
@@ -210,7 +266,23 @@ func main() {
 				log.Fatal(err)
 			}
 
-			fmt.Println(result)
+			s := &sectores{
+				nombre:    sector,
+				reloj:     result.Clock,
+				direccion: result.Id,
+			}
+
+			flag := 0
+			for i, v := range registros {
+				if v.nombre == sector {
+					registros[i] = *s
+					flag = 1
+				}
+			}
+
+			if flag == 0 {
+				registros = append(registros, *s)
+			}
 
 		case 5:
 			return // Exit the program
@@ -219,6 +291,5 @@ func main() {
 			fmt.Println("Ingrese una opcion valida")
 			continue // Restart the loop
 		}
-
 	}
 }
