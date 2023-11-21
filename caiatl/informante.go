@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func getServer(client pb.InformerServiceClient, req *pb.GetServerServiceReq) (*pb.GetServerServiceRes, error) {
+func getServer(client pb.BrokerServiceClient, req *pb.GetServerServiceReq) (*pb.GetServerServiceRes, error) {
 	resp, err := client.GetServer(context.Background(), req)
 	if err != nil {
 		log.Fatal(err)
@@ -57,9 +57,9 @@ func main() {
 	}
 	defer cc.Close()
 
-	client_brok := pb.NewInformerServiceClient(cc)
+	client_brok := pb.NewBrokerServiceClient(cc)
 
-	str_id := "Read your Writes"
+	str_id := "Caiatl"
 
 	for {
 		fmt.Println("Ingrese comando: ")
@@ -88,6 +88,9 @@ func main() {
 			fmt.Scanln(&valor)
 
 			server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			optz := grpc.WithInsecure()
 			sj, err := grpc.Dial(server_id.Id, optz)
@@ -124,6 +127,9 @@ func main() {
 			fmt.Scanln(&new_name)
 
 			server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			optz := grpc.WithInsecure()
 			sj, err := grpc.Dial(server_id.Id, optz)
@@ -160,6 +166,9 @@ func main() {
 			fmt.Scanln(&new_valor)
 
 			server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			optz := grpc.WithInsecure()
 			sj, err := grpc.Dial(server_id.Id, optz)
@@ -201,6 +210,9 @@ func main() {
 			defer cc.Close()
 
 			client_serv := pb.NewInformerServiceClient(sj)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			result, err := deleteBase(client_serv, &pb.DeleteBaseServiceReq{
 				Id:     str_id,
