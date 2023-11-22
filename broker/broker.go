@@ -18,15 +18,68 @@ type getSoldiersServer struct {
 	fulcrum_client_3 pb.ServidorServiceClient
 }
 
+func ensure_consistency(ctx context.Context, req *pb.GetSoldiersServiceReq, s *getSoldiersServer) int {
+	index := 0
+
+	result_1, err := s.fulcrum_client_1.AskServer(ctx, &pb.AskServerServiceReq{
+		Id:     req.Id,
+		Sector: req.Sector,
+		Base:   "",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result_2, err := s.fulcrum_client_2.AskServer(ctx, &pb.AskServerServiceReq{
+		Id:     req.Id,
+		Sector: req.Sector,
+		Base:   "",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result_3, err := s.fulcrum_client_3.AskServer(ctx, &pb.AskServerServiceReq{
+		Id:     req.Id,
+		Sector: req.Sector,
+		Base:   "",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if result_1.Clock[1] >= result_2.Clock[1] && result_1.Clock[1] >= result_3.Clock[1] {
+		index = 0
+	} else if result_3.Clock[1] >= result_1.Clock[1] && result_3.Clock[1] >= result_2.Clock[1] {
+		index = 2
+	} else if result_2.Clock[0] >= result_1.Clock[0] && result_2.Clock[0] >= result_3.Clock[0] {
+		index = 1
+	} else if result_3.Clock[0] >= result_1.Clock[0] && result_3.Clock[0] >= result_2.Clock[0] {
+		index = 2
+	} else if result_1.Clock[2] >= result_2.Clock[2] && result_1.Clock[2] >= result_3.Clock[2] {
+		index = 0
+	} else if result_2.Clock[2] >= result_1.Clock[2] && result_2.Clock[2] >= result_3.Clock[2] {
+		index = 1
+	}
+
+	return index
+}
+
 func (s *getSoldiersServer) GetSoldiers(ctx context.Context, req *pb.GetSoldiersServiceReq) (*pb.GetSoldiersServiceRes, error) {
 	urls := [3]string{"localhost:50051", "localhost:50052", "localhost:50053"}
+	index := 0
 
-	index := rand.Intn(2)
+	if req.Id == "Error" {
+		index = ensure_consistency(ctx, req, s)
+	} else {
+		index = rand.Intn(2)
+	}
+
 	server_id := urls[index]
-
 	valor := int64(0)
 	clock := []int64{0, 0, 0}
 
+	fmt.Println("Conectando a servidor: ")
 	fmt.Println(server_id)
 
 	switch index {
@@ -67,7 +120,7 @@ func (s *getSoldiersServer) GetSoldiers(ctx context.Context, req *pb.GetSoldiers
 		}
 
 		valor = result.Valor
-		clock[2] = int64(1)
+		clock = result.Clock
 
 	default:
 		log.Fatal("Index no valido")

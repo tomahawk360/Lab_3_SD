@@ -91,4 +91,5 @@ message AskServerServiceReq {
 message AskServerServiceRes {
     string id = 1;
     int64 valor = 2;
+    repeated int64 clock = 3;
 }
