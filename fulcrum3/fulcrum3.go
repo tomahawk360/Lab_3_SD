@@ -1,29 +1,29 @@
 package main
 
 import (
-    "fmt"
-    "bufio"
-    "os"
-    "time"
-    "strings"
+	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"main/pb"
 	"net"
+	"os"
+	"strings"
+	"time"
 
 	"google.golang.org/grpc"
 )
 
 type Action struct {
-    Cmd        string
-	Sector	   string      
-    Base       string
-    NewValue   string
+	Cmd      string
+	Sector   string
+	Base     string
+	NewValue string
 }
 
 var (
-    logfile, _ = os.OpenFile("logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-    logger     = log.New(logfile, "", 0)
+	logfile, _ = os.OpenFile("logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logger     = log.New(logfile, "", 0)
 )
 
 type server struct {
@@ -31,11 +31,11 @@ type server struct {
 }
 
 func (s *server) SendLogs(ctx context.Context, in *pb.LogRequest) (*pb.LogResponse, error) {
-    logs, err := readLogs() 
-    if err != nil {
-        return nil, err 
-    }
-    return &pb.LogResponse{Logs: logs}, nil
+	logs, err := readLogs()
+	if err != nil {
+		return nil, err
+	}
+	return &pb.LogResponse{Logs: logs}, nil
 }
 
 func readLogs() ([]string, error) {
@@ -60,15 +60,15 @@ func readLogs() ([]string, error) {
 
 func handleAction(action Action) {
 	sectorFile, err := os.OpenFile(action.Sector+".txt", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-    if err != nil {
-        log.Fatalf("Error opening sector file: %v", err)
-    }
-    defer sectorFile.Close()
+	if err != nil {
+		log.Fatalf("Error opening sector file: %v", err)
+	}
+	defer sectorFile.Close()
 
-    writer := bufio.NewWriter(sectorFile)
+	writer := bufio.NewWriter(sectorFile)
 
-    switch action.Cmd {
-    case "AgregarBase":
+	switch action.Cmd {
+	case "AgregarBase":
 		if !baseExists(sectorFile, action.Base) {
 			fmt.Printf("Añadiendo base \"%v\" en sector \"%v\" con valor %v\n", action.Base, action.Sector, action.NewValue)
 			logger.Printf("%s AgregarBase %v %v %v", time.Now().Format("15:04:05"), action.Sector, action.Base, action.NewValue)
@@ -77,7 +77,7 @@ func handleAction(action Action) {
 			fmt.Printf("La base \"%v\" ya existe en el sector \"%v\"\n", action.Base, action.Sector)
 		}
 
-    case "ActualizarValor":
+	case "ActualizarValor":
 		if updateBaseValue(sectorFile, action.Base, action.NewValue) {
 			fmt.Printf("Actualizando base \"%v\" en sector \"%v\" a valor %v\n", action.Base, action.Sector, action.NewValue)
 			logger.Printf("%s ActualizarValor %v %v %v", time.Now().Format("15:04:05"), action.Sector, action.Base, action.NewValue)
@@ -88,22 +88,22 @@ func handleAction(action Action) {
 			writer.Flush()
 		}
 
-    case "RenombrarBase":
+	case "RenombrarBase":
 		renameBase(sectorFile, action.Base, action.NewValue)
-        fmt.Printf("Renombrando base \"%v\" en sector \"%v\" a valor %v\n", action.Base , action.Sector, action.NewValue)
+		fmt.Printf("Renombrando base \"%v\" en sector \"%v\" a valor %v\n", action.Base, action.Sector, action.NewValue)
 		logger.Printf("%s RenombrarBase %v %v %v", time.Now().Format("15:04:05"), action.Sector, action.Base, action.NewValue)
 
-    case "BorrarBase":
+	case "BorrarBase":
 		removeBase(sectorFile, action.Base)
-        fmt.Printf("Quitando base \"%v\" en sector \"%v\"\n", action.Base, action.Sector)
+		fmt.Printf("Quitando base \"%v\" en sector \"%v\"\n", action.Base, action.Sector)
 		logger.Printf("%s BorrarBase %v %v", time.Now().Format("15:04:05"), action.Sector, action.Base)
 
 	case "sync":
 		break
 
-    default:
-        fmt.Println("Accion Invalida")
-    }
+	default:
+		fmt.Println("Accion Invalida")
+	}
 	writer.Flush()
 }
 
@@ -126,8 +126,8 @@ func updateBaseValue(file *os.File, base string, newValue string) bool {
 	}
 
 	for i, line := range lines {
-		if strings.Contains(line,base) {
-			lines[i] = fmt.Sprintf("%v %s",base, newValue)
+		if strings.Contains(line, base) {
+			lines[i] = fmt.Sprintf("%v %s", base, newValue)
 			writeLines(file, lines)
 			return true
 		}
@@ -167,7 +167,6 @@ func renameBase(file *os.File, oldBase string, newBase string) {
 	writeLines(file, lines)
 }
 
-
 func removeBase(file *os.File, base string) {
 	lines, err := readLines(file)
 	if err != nil {
@@ -184,8 +183,6 @@ func removeBase(file *os.File, base string) {
 
 	writeLines(file, updatedLines)
 }
-
-
 
 func readLines(file *os.File) ([]string, error) {
 	var lines []string
@@ -209,14 +206,13 @@ func writeLines(file *os.File, lines []string) {
 	writer.Flush()
 }
 
-
 func main() {
 	fmt.Println("Huh")
-	listener, err := net.Listen("tcp", ":50050")
+	listener, err := net.Listen("tcp", ":50053")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Server running on port :50050")
+	fmt.Println("Server running on port :50053")
 
 	s := grpc.NewServer()
 	pb.RegisterLogServiceServer(s, &server{})
@@ -224,24 +220,24 @@ func main() {
 		log.Fatalf("failed to serve: %v", err)
 	}
 
-    defer logfile.Close()
-    reader := bufio.NewReader(os.Stdin)
-    for {
-        fmt.Print("> ")
-        text, _ := reader.ReadString('\n')
-        text = strings.TrimSuffix(text, "\n")
-        commands := strings.Split(text, " ")
-        if len(commands) < 3 {
-            fmt.Println("Comando invalido, debe tener formato <Accion> <Sector> <Base> <Valor>")
-            continue
-        }
+	defer logfile.Close()
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.TrimSuffix(text, "\n")
+		commands := strings.Split(text, " ")
+		if len(commands) < 3 {
+			fmt.Println("Comando invalido, debe tener formato <Accion> <Sector> <Base> <Valor>")
+			continue
+		}
 
-        action := Action{Cmd: commands[0], Sector: commands[1], Base: commands[2]}
+		action := Action{Cmd: commands[0], Sector: commands[1], Base: commands[2]}
 
-        if len(commands) > 3 {
-            action.NewValue = commands[3]
-        }
+		if len(commands) > 3 {
+			action.NewValue = commands[3]
+		}
 
-        handleAction(action)
-    }
+		handleAction(action)
+	}
 }

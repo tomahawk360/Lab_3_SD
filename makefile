@@ -8,15 +8,15 @@ docker-vanguardia:
 
 docker-f1:
         docker build . -t go-containerized-f1:latest --build-arg var=f1
-        docker run -e var=f1 -p 50052:50052 --name f1 go-containerized-f1:latest
+        docker run -e var=f1 -p 50051:50051 --name f1 go-containerized-f1:latest
 
 docker-f2:
         docker build . -t go-containerized-f2:latest --build-arg var=f2
-        docker run -e var=f2 -p 50051:50051 --name f2 go-containerized-f2:latest
+        docker run -e var=f2 -p 50052:50052 --name f2 go-containerized-f2:latest
 
 docker-f3:
         docker build . -t go-containerized-f3:latest --build-arg var=f3
-        docker run -e var=f3 -p 50050:50050 --name f3 go-containerized-f3:latest
+        docker run -e var=f3 -p 50053:50053 --name f3 go-containerized-f3:latest
 
 docker-i1:
         docker build . -t go-containerized-i1:latest --build-arg var=i1
