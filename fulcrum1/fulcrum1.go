@@ -40,7 +40,7 @@ var (
 )
 
 func requestLogs() {
-    conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure()) 
+    conn, err := grpc.Dial("inf.santiago.usm.cl:50051", grpc.WithInsecure()) 
 	if err != nil {
 		fmt.Println("error")
 	}
@@ -52,7 +52,7 @@ func requestLogs() {
 	}
 
 
-	conn2, err := grpc.Dial("localhost:50050", grpc.WithInsecure()) 
+	conn2, err := grpc.Dial("inf.santiago.usm.cl:50050", grpc.WithInsecure()) 
 	if err != nil {
 		fmt.Println("error")
 	}
