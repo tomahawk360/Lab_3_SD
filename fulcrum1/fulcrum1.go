@@ -314,7 +314,7 @@ func writeLines(file *os.File, lines []string) {
 
 func main() {
     defer logfile.Close()
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":50050")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
