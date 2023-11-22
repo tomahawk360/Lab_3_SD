@@ -212,11 +212,11 @@ func writeLines(file *os.File, lines []string) {
 
 func main() {
 	fmt.Println("Huh")
-	listener, err := net.Listen("tcp", ":50051")
+	listener, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Server running on port :50051")
+	fmt.Println("Server running on port :50052")
 
 	s := grpc.NewServer()
 	pb.RegisterLogServiceServer(s, &server{})
