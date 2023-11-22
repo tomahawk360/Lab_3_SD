@@ -18,6 +18,18 @@ service ServidorService {
     rpc AskServer(AskServerServiceReq) returns (AskServerServiceRes) {}
 }
 
+service LogService {
+    rpc SendLogs (LogRequest) returns (LogResponse) {}
+}
+
+message LogRequest {
+    string serverID = 1;
+}
+
+message LogResponse {
+    repeated string logs = 1;
+}
+
 message GetSoldiersServiceReq {
     string id = 1;
     string sector = 2;
@@ -42,7 +54,7 @@ message AddBaseServiceReq {
     string id = 1;
     string sector = 2;
     string base = 3;
-    optional int64 valor = 4;
+    int64 valor = 4;
 }
 
 message RenameBaseServiceReq {
