@@ -27,7 +27,7 @@ func getSoldiers(client pb.BrokerServiceClient, req *pb.GetSoldiersServiceReq) (
 func main() {
 	var registros []sectores
 
-	cc, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+	cc, err := grpc.Dial("dist116.inf.santiago.usm.cl:8080", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 	}
