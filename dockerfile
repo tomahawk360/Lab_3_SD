@@ -12,6 +12,9 @@ RUN go mod download
 CMD if [ "$var" = "broker" ]; then \
     cd /app/broker; \
     go run broker.go; \
+    if [ "$var" = "vanguardia" ]; then \
+    cd /app/vanguardia; \
+    go run vanguard.go; \
     elif [ "$var" = "f1" ]; then \
     cd /app/fulcrum1; \
     go run fulcrum1.go; \
@@ -27,3 +30,6 @@ CMD if [ "$var" = "broker" ]; then \
     elif [ "$var" = "i2" ]; then \
     cd /app/osiris; \
     go run informante.go; \
+    else \
+    echo "Invalid value for 'var'"; \
+    fi

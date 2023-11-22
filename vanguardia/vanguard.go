@@ -36,6 +36,7 @@ func main() {
 	client_brok := pb.NewBrokerServiceClient(cc)
 
 	str_id := "La Vanguardia"
+	consistent := 0
 
 	for {
 		var opt string
@@ -54,33 +55,45 @@ func main() {
 			fmt.Println("Ingrese nombre de la base: ")
 			fmt.Scanln(&base)
 
-			soldiers, err := getSoldiers(client_brok, &pb.GetSoldiersServiceReq{
-				Id:     str_id,
-				Sector: sector,
-				Base:   base,
-			})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Println(strconv.FormatInt(soldiers.Valor, 10))
-
-			s := &sectores{
-				nombre:    sector,
-				reloj:     soldiers.Clock,
-				direccion: soldiers.Id,
-			}
-
-			flag := 0
-			for i, v := range registros {
-				if v.nombre == sector {
-					registros[i] = *s
-					flag = 1
+			for consistent == 0 {
+				soldiers, err := getSoldiers(client_brok, &pb.GetSoldiersServiceReq{
+					Id:     str_id,
+					Sector: sector,
+					Base:   base,
+				})
+				if err != nil {
+					log.Fatal(err)
 				}
-			}
 
-			if flag == 0 {
-				registros = append(registros, *s)
+				fmt.Println(strconv.FormatInt(soldiers.Valor, 10))
+
+				s := &sectores{
+					nombre:    sector,
+					reloj:     soldiers.Clock,
+					direccion: soldiers.Id,
+				}
+
+				flag := 0
+				str_id = "Error"
+				new_clock := s.reloj
+
+				for i, v := range registros {
+					if v.nombre == sector {
+						saved_clock := v.reloj
+
+						if new_clock[0] >= saved_clock[0] && new_clock[1] >= saved_clock[1] && new_clock[2] >= saved_clock[2] {
+							registros[i] = *s
+							flag = 1
+							consistent = 1
+						}
+
+					}
+				}
+
+				if flag == 0 {
+					registros = append(registros, *s)
+					consistent = 1
+				}
 			}
 		} else {
 			return

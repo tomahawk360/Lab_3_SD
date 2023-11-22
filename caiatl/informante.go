@@ -15,6 +15,34 @@ type sectores struct {
 	direccion string
 }
 
+func checkConsistency(client pb.BrokerServiceClient, registros []sectores, sector string, s *sectores) (int, string) {
+	consistent := 0
+	flag := 0
+	new_clock := s.reloj
+
+	str_id := "Error"
+
+	for i, v := range registros {
+		if v.nombre == sector {
+			saved_clock := v.reloj
+
+			if new_clock[0] >= saved_clock[0] && new_clock[1] >= saved_clock[1] && new_clock[2] >= saved_clock[2] {
+				registros[i] = *s
+				flag = 1
+				consistent = 1
+			}
+
+		}
+	}
+
+	if flag == 0 {
+		registros = append(registros, *s)
+		consistent = 1
+	}
+
+	return consistent, str_id
+}
+
 func getServer(client pb.BrokerServiceClient, req *pb.GetServerServiceReq) (*pb.GetServerServiceRes, error) {
 	resp, err := client.GetServer(context.Background(), req)
 	if err != nil {
@@ -57,6 +85,7 @@ func deleteBase(client pb.InformerServiceClient, req *pb.DeleteBaseServiceReq) (
 
 func main() {
 	var registros []sectores
+
 	opts := grpc.WithInsecure()
 	cc, err := grpc.Dial("localhost:8080", opts)
 	if err != nil {
@@ -85,6 +114,8 @@ func main() {
 			var base string
 			var valor int64
 
+			consistent := 0
+
 			fmt.Println("Ingrese nombre del sector: ")
 			fmt.Scanln(&sector)
 
@@ -94,51 +125,42 @@ func main() {
 			fmt.Println("Ingrese valor: ")
 			fmt.Scanln(&valor)
 
-			server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
-			if err != nil {
-				log.Fatal(err)
-			}
+			for consistent == 0 {
+				server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
 
-			optz := grpc.WithInsecure()
-			sj, err := grpc.Dial(server_id.Id, optz)
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer cc.Close()
-
-			client_serv := pb.NewInformerServiceClient(sj)
-
-			result, err := addBase(client_serv, &pb.AddBaseServiceReq{
-				Id:     str_id,
-				Sector: sector,
-				Base:   base,
-				Valor:  &valor})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			s := &sectores{
-				nombre:    sector,
-				reloj:     result.Clock,
-				direccion: result.Id,
-			}
-
-			flag := 0
-			for i, v := range registros {
-				if v.nombre == sector {
-					registros[i] = *s
-					flag = 1
+				optz := grpc.WithInsecure()
+				sj, err := grpc.Dial(server_id.Id, optz)
+				if err != nil {
+					log.Fatal(err)
 				}
-			}
+				defer cc.Close()
 
-			if flag == 0 {
-				registros = append(registros, *s)
+				client_serv := pb.NewInformerServiceClient(sj)
+
+				result, err := addBase(client_serv, &pb.AddBaseServiceReq{
+					Id:     str_id,
+					Sector: sector,
+					Base:   base,
+					Valor:  &valor})
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				s := &sectores{
+					nombre:    sector,
+					reloj:     result.Clock,
+					direccion: result.Id,
+				}
+
+				consistent, str_id = checkConsistency(client_brok, registros, sector, s)
 			}
 
 		case 2:
 			var sector string
 			var base string
 			var new_name string
+
+			consistent := 0
 
 			fmt.Println("Ingrese nombre del sector: ")
 			fmt.Scanln(&sector)
@@ -149,51 +171,42 @@ func main() {
 			fmt.Println("Ingrese el nuevo nombre: ")
 			fmt.Scanln(&new_name)
 
-			server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
-			if err != nil {
-				log.Fatal(err)
-			}
+			for consistent == 0 {
+				server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
 
-			optz := grpc.WithInsecure()
-			sj, err := grpc.Dial(server_id.Id, optz)
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer cc.Close()
-
-			client_serv := pb.NewInformerServiceClient(sj)
-
-			result, err := renameBase(client_serv, &pb.RenameBaseServiceReq{
-				Id:     str_id,
-				Sector: sector,
-				Base:   base,
-				Name:   new_name})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			s := &sectores{
-				nombre:    sector,
-				reloj:     result.Clock,
-				direccion: result.Id,
-			}
-
-			flag := 0
-			for i, v := range registros {
-				if v.nombre == sector {
-					registros[i] = *s
-					flag = 1
+				optz := grpc.WithInsecure()
+				sj, err := grpc.Dial(server_id.Id, optz)
+				if err != nil {
+					log.Fatal(err)
 				}
-			}
+				defer cc.Close()
 
-			if flag == 0 {
-				registros = append(registros, *s)
+				client_serv := pb.NewInformerServiceClient(sj)
+
+				result, err := renameBase(client_serv, &pb.RenameBaseServiceReq{
+					Id:     str_id,
+					Sector: sector,
+					Base:   base,
+					Name:   new_name})
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				s := &sectores{
+					nombre:    sector,
+					reloj:     result.Clock,
+					direccion: result.Id,
+				}
+
+				consistent, str_id = checkConsistency(client_brok, registros, sector, s)
 			}
 
 		case 3:
 			var sector string
 			var base string
 			var new_valor int64
+
+			consistent := 0
 
 			fmt.Println("Ingrese nombre del sector: ")
 			fmt.Scanln(&sector)
@@ -204,50 +217,41 @@ func main() {
 			fmt.Println("Ingrese el nuevo valor: ")
 			fmt.Scanln(&new_valor)
 
-			server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
-			if err != nil {
-				log.Fatal(err)
-			}
+			for consistent == 0 {
+				server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
 
-			optz := grpc.WithInsecure()
-			sj, err := grpc.Dial(server_id.Id, optz)
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer cc.Close()
-
-			client_serv := pb.NewInformerServiceClient(sj)
-
-			result, err := updateValue(client_serv, &pb.UpdateValueServiceReq{
-				Id:     str_id,
-				Sector: sector,
-				Base:   base,
-				Valor:  new_valor})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			s := &sectores{
-				nombre:    sector,
-				reloj:     result.Clock,
-				direccion: result.Id,
-			}
-
-			flag := 0
-			for i, v := range registros {
-				if v.nombre == sector {
-					registros[i] = *s
-					flag = 1
+				optz := grpc.WithInsecure()
+				sj, err := grpc.Dial(server_id.Id, optz)
+				if err != nil {
+					log.Fatal(err)
 				}
-			}
+				defer cc.Close()
 
-			if flag == 0 {
-				registros = append(registros, *s)
+				client_serv := pb.NewInformerServiceClient(sj)
+
+				result, err := updateValue(client_serv, &pb.UpdateValueServiceReq{
+					Id:     str_id,
+					Sector: sector,
+					Base:   base,
+					Valor:  new_valor})
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				s := &sectores{
+					nombre:    sector,
+					reloj:     result.Clock,
+					direccion: result.Id,
+				}
+
+				consistent, str_id = checkConsistency(client_brok, registros, sector, s)
 			}
 
 		case 4:
 			var sector string
 			var base string
+
+			consistent := 0
 
 			fmt.Println("Ingrese nombre del sector: ")
 			fmt.Scanln(&sector)
@@ -255,44 +259,33 @@ func main() {
 			fmt.Println("Ingrese nombre de la base: ")
 			fmt.Scanln(&base)
 
-			server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
+			for consistent == 0 {
+				server_id, err := getServer(client_brok, &pb.GetServerServiceReq{Id: str_id})
 
-			optz := grpc.WithInsecure()
-			sj, err := grpc.Dial(server_id.Id, optz)
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer cc.Close()
-
-			client_serv := pb.NewInformerServiceClient(sj)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			result, err := deleteBase(client_serv, &pb.DeleteBaseServiceReq{
-				Id:     str_id,
-				Sector: sector,
-				Base:   base})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			s := &sectores{
-				nombre:    sector,
-				reloj:     result.Clock,
-				direccion: result.Id,
-			}
-
-			flag := 0
-			for i, v := range registros {
-				if v.nombre == sector {
-					registros[i] = *s
-					flag = 1
+				optz := grpc.WithInsecure()
+				sj, err := grpc.Dial(server_id.Id, optz)
+				if err != nil {
+					log.Fatal(err)
 				}
-			}
+				defer cc.Close()
 
-			if flag == 0 {
-				registros = append(registros, *s)
+				client_serv := pb.NewInformerServiceClient(sj)
+
+				result, err := deleteBase(client_serv, &pb.DeleteBaseServiceReq{
+					Id:     str_id,
+					Sector: sector,
+					Base:   base})
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				s := &sectores{
+					nombre:    sector,
+					reloj:     result.Clock,
+					direccion: result.Id,
+				}
+
+				consistent, str_id = checkConsistency(client_brok, registros, sector, s)
 			}
 
 		case 5:
@@ -302,6 +295,5 @@ func main() {
 			fmt.Println("Ingrese una opcion valida")
 			continue // Restart the loop
 		}
-
 	}
 }

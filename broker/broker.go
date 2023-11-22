@@ -83,7 +83,7 @@ func (s *getSoldiersServer) GetSoldiers(ctx context.Context, req *pb.GetSoldiers
 }
 
 func (s *getSoldiersServer) GetServer(ctx context.Context, req *pb.GetServerServiceReq) (*pb.GetServerServiceRes, error) {
-	urls := [3]string{"localhost:8010", "localhost:8012", "localhost:8014"}
+	urls := [3]string{"localhost:50050", "localhost:50051", "localhost:50052"}
 
 	index := rand.Intn(2)
 	server_id := urls[index]
@@ -96,21 +96,21 @@ func (s *getSoldiersServer) GetServer(ctx context.Context, req *pb.GetServerServ
 }
 
 func main() {
-	fulcrum_serv_1, err := grpc.Dial("localhost:8010", grpc.WithInsecure())
+	fulcrum_serv_1, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Fulcrum server 1: %v", err)
 	}
 	defer fulcrum_serv_1.Close()
 	fulcrum_client_1 := pb.NewServidorServiceClient(fulcrum_serv_1)
 
-	fulcrum_serv_2, err := grpc.Dial("localhost:8012", grpc.WithInsecure())
+	fulcrum_serv_2, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Fulcrum server 2: %v", err)
 	}
 	defer fulcrum_serv_2.Close()
 	fulcrum_client_2 := pb.NewServidorServiceClient(fulcrum_serv_2)
 
-	fulcrum_serv_3, err := grpc.Dial("localhost:8014", grpc.WithInsecure())
+	fulcrum_serv_3, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Fulcrum server 3: %v", err)
 	}
