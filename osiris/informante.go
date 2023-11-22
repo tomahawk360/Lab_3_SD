@@ -87,7 +87,7 @@ func main() {
 	var registros []sectores
 
 	opts := grpc.WithInsecure()
-	cc, err := grpc.Dial("localhost:8080", opts)
+	cc, err := grpc.Dial("dist116.inf.santiago.usm.cl:8080", opts)
 	if err != nil {
 		log.Fatal(err)
 	}
