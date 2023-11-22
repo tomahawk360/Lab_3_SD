@@ -9,10 +9,12 @@ COPY go.sum .
 
 RUN go mod download
 
+COPY . .
+
 CMD if [ "$var" = "broker" ]; then \
     cd /app/broker; \
     go run broker.go; \
-    if [ "$var" = "vanguardia" ]; then \
+    elif [ "$var" = "vanguardia" ]; then \
     cd /app/vanguardia; \
     go run vanguard.go; \
     elif [ "$var" = "f1" ]; then \
