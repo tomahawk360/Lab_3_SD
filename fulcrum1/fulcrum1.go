@@ -9,6 +9,7 @@ import (
 	"context"
 	"log"
 	"main/pb"
+	"strconv"
 	"net"
 
 	"google.golang.org/grpc"
@@ -29,6 +30,10 @@ type InformerServiceServer struct{
 	pb.UnimplementedInformerServiceServer
 }
 
+type ServidorServiceServer struct{
+	pb.UnimplementedServidorServiceServer
+}
+
 var (
     logfile, _ = os.OpenFile("logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
     logger     = log.New(logfile, "", 0)
@@ -45,7 +50,7 @@ func requestLogs() {
 	if err != nil {
 		log.Fatalf("Could not get logs: %v", err)
 	}
-	processLogs(r.Logs)
+
 
 	conn2, err := grpc.Dial("localhost:50050", grpc.WithInsecure()) 
 	if err != nil {
@@ -57,13 +62,54 @@ func requestLogs() {
 	if err != nil {
 		log.Fatalf("Could not get logs: %v", err)
 	}
-	processLogs(r2.Logs)
+	processLogs(r.Logs, r2.Logs)
 }
 
-func processLogs(logs []string) {
-    for i := range logs {
-        fmt.Println(logs[i])
+func processLogs(logs2 []string, logs3 []string) {
+	file, err := os.Open("logfile.txt")
+	if err != nil {
+		log.Fatalf("Error opening file: %v", err)
+	}
+	defer file.Close()
+
+	var logs []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		logs = append(logs, scanner.Text())
+	}
+
+}
+
+func GetSoldiers (file *os.File, base string) (int64){
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, base) {
+			//split the line
+			//return the value
+
+			stringSlice := strings.Fields(line)
+			i, err := strconv.ParseInt(stringSlice[1], 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			return i
+		}
+	}
+	return -1
+}
+
+
+func (s *ServidorServiceServer) AskServer (ctx context.Context, msg *pb.AskServerServiceReq) (*pb.AskServerServiceRes, error){
+	sectorFile, err := os.OpenFile(msg.Sector+".txt", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+    if err != nil {
+        log.Fatalf("Error opening sector file: %v", err)
     }
+    defer sectorFile.Close()
+
+	var soldier int64 = GetSoldiers(sectorFile, msg.Base)
+
+	return &pb.AskServerServiceRes{Id: "1", Valor: soldier, Clock: []int64{0,0,0}}, nil
 }
 
 func (s *InformerServiceServer) DeleteBase (ctx context.Context, msg *pb.DeleteBaseServiceReq) (*pb.ConnectServiceRes, error){
@@ -161,28 +207,6 @@ func readLogs() ([]string, error) {
 	}
 
 	return logs, nil
-}
-
-func handleAction(action Action) {
-	sectorFile, err := os.OpenFile(action.Sector+".txt", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-    if err != nil {
-        log.Fatalf("Error opening sector file: %v", err)
-    }
-    defer sectorFile.Close()
-
-    writer := bufio.NewWriter(sectorFile)
-
-    switch action.Cmd {
-
-    case "BorrarBase":
-		removeBase(sectorFile, action.Base)
-        fmt.Printf("Quitando base \"%v\" en sector \"%v\"\n", action.Base, action.Sector)
-		logger.Printf("%s BorrarBase %v %v", time.Now().Format("15:04:05"), action.Sector, action.Base)
-
-    default:
-        fmt.Println("Accion Invalida")
-    }
-	writer.Flush()
 }
 
 func baseExists(file *os.File, base string) bool {
@@ -290,7 +314,6 @@ func writeLines(file *os.File, lines []string) {
 
 func main() {
     defer logfile.Close()
-	
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
@@ -303,4 +326,20 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Failed to serve: %v", err)
     }
+
+	//implemnet listen for ask
+
+	list, err := net.Listen("tcp", ":50040")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	grpcServer2 := grpc.NewServer()
+	pb.RegisterServidorServiceServer(grpcServer2, &ServidorServiceServer{})
+	log.Printf("Server listening on %v", list.Addr())
+
+	if err := grpcServer2.Serve(list); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+	}
+	
 }
