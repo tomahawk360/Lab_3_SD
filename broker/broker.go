@@ -66,7 +66,7 @@ func ensure_consistency(ctx context.Context, req *pb.GetSoldiersServiceReq, s *g
 }
 
 func (s *getSoldiersServer) GetSoldiers(ctx context.Context, req *pb.GetSoldiersServiceReq) (*pb.GetSoldiersServiceRes, error) {
-	urls := [3]string{"inf.santiago.usm.cl:50051", "inf.santiago.usm.cl:50052", "inf.santiago.usm.cl:50053"}
+	urls := [3]string{"dist113.inf.santiago.usm.cl:50051", "dist114.inf.santiago.usm.cl:50052", "dist115.inf.santiago.usm.cl:50053"}
 	index := 0
 
 	if req.Id == "Error" {
@@ -136,7 +136,7 @@ func (s *getSoldiersServer) GetSoldiers(ctx context.Context, req *pb.GetSoldiers
 }
 
 func (s *getSoldiersServer) GetServer(ctx context.Context, req *pb.GetServerServiceReq) (*pb.GetServerServiceRes, error) {
-	urls := [3]string{"inf.santiago.usm.cl:50051", "inf.santiago.usm.cl:50052", "inf.santiago.usm.cl:50053"}
+	urls := [3]string{"dist113.inf.santiago.usm.cl:50051", "dist114.inf.santiago.usm.cl:50052", "dist115.inf.santiago.usm.cl:50053"}
 
 	index := rand.Intn(2)
 	server_id := urls[index]
@@ -149,21 +149,21 @@ func (s *getSoldiersServer) GetServer(ctx context.Context, req *pb.GetServerServ
 }
 
 func main() {
-	fulcrum_serv_1, err := grpc.Dial("inf.santiago.usm.cl:50051", grpc.WithInsecure())
+	fulcrum_serv_1, err := grpc.Dial("dist113.inf.santiago.usm.cl:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Fulcrum server 1: %v", err)
 	}
 	defer fulcrum_serv_1.Close()
 	fulcrum_client_1 := pb.NewServidorServiceClient(fulcrum_serv_1)
 
-	fulcrum_serv_2, err := grpc.Dial("inf.santiago.usm.cl:50052", grpc.WithInsecure())
+	fulcrum_serv_2, err := grpc.Dial("dist114.inf.santiago.usm.cl:50052", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Fulcrum server 2: %v", err)
 	}
 	defer fulcrum_serv_2.Close()
 	fulcrum_client_2 := pb.NewServidorServiceClient(fulcrum_serv_2)
 
-	fulcrum_serv_3, err := grpc.Dial("inf.santiago.usm.cl:50053", grpc.WithInsecure())
+	fulcrum_serv_3, err := grpc.Dial("dist115.inf.santiago.usm.cl:50053", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Fulcrum server 3: %v", err)
 	}
